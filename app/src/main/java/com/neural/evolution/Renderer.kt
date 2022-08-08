@@ -25,6 +25,9 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
         track.getBlocks().forEach {
             it.draw(batch)
         }
+        track.getBorderLine().forEach {
+            batch.draw(it)
+        }
         batch.end()
 
     }
