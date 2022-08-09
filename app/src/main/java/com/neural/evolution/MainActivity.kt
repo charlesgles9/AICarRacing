@@ -8,7 +8,7 @@ class MainActivity : AppCompatActivity() {
     private var surface:GLCanvasSurfaceView?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val renderer =Renderer(this,1280f,720f)
+        val renderer =Renderer(this,1024f,720f)
         surface=GLCanvasSurfaceView(this,renderer)
         setContentView(surface)
     }

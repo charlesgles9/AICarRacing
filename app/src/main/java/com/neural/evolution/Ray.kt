@@ -11,6 +11,8 @@ import kotlin.math.sin
 class Ray(startX:Float,startY:Float,stopX:Float,stopY:Float):Line(startX, startY, stopX, stopY),Update {
 
       private val edge=Circle(stopX,stopY,5f)
+      var angle=0f
+      var pAngle=0f
       var showEdge=false
       init {
         edge.setColor(ColorRGBA.red)
@@ -23,18 +25,19 @@ class Ray(startX:Float,startY:Float,stopX:Float,stopY:Float):Line(startX, startY
 
 
     fun project(distance:Float,startX:Float,startY: Float){
-        val radians=Math.toRadians(getRotationZ().toDouble()).toFloat()
-        setStopX(getStartX()+distance* sin(radians))
-        setStopY(getStopY()+distance* cos(radians))
+        val radians=Math.toRadians(angle.toDouble()+pAngle).toFloat()
+        setStopX(startX+distance* sin(radians))
+        setStopY(startY+distance* cos(radians))
         setStartX(startX)
         setStartY(startY)
     }
 
     override fun draw(batch: Batch) {
-          edge.set(getStopX(),getStopY())
+        edge.set(getStopX(),getStopY())
            batch.draw(this)
           if(showEdge)
            batch.draw(edge)
+       // println(" "+getStopX()+" "+getStopY())
     }
 
     override fun update(delta: Long) {

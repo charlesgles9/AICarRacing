@@ -43,7 +43,7 @@ public class Collision {
         float px2=line.getStopX();
         float py1=line.getStartY();
         float py2=line.getStopY();
-        line.setStopX(px1+determinant*(px2-px1));
+       line.setStopX(px1+determinant*(px2-px1));
         line.setStopY(py1+determinant*(py2-py1));
     }
 
