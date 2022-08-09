@@ -7,7 +7,7 @@ class Track {
 
     private val text=StringBuffer()
     private val blocks= mutableListOf<Block>()
-    private val borderLines= mutableListOf<Line>()
+    private val borderLines= mutableListOf<Ray>()
     init {
         text.append("1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n")
         text.append("1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1\n")
@@ -59,9 +59,10 @@ class Track {
                 val index=i*array.size+j
                 if (array[i][j] == "0"||visitedNodes.contains(index))
                     continue
-                //walk to the right and see if there's a valid block
+
                 var stopRight=j
                 var stopBottom=i
+                //walk to the right and see if there's a valid block
                     for(k in j+1 until array[i].size){
                         if(array[i][k]=="0")
                             break
@@ -77,17 +78,18 @@ class Track {
                     }
 
                if(stopRight!=j)
-                  borderLines.addAll( createBoundary1(j*50f,i*50f,stopRight*50f,i*50f,offset))
+                  borderLines.addAll( createBoundaryVertical(j*50f,i*50f,stopRight*50f,i*50f,offset))
                 if(stopBottom!=i)
-                 borderLines.addAll(createBoundary2(j*50f,i*50f,j*50f,stopBottom*50f,offset))
+                 borderLines.addAll(createBoundaryHorizontal(j*50f,i*50f,j*50f,stopBottom*50f,offset))
             }
         }
     }
-    private fun createBoundary1(x:Float,y:Float,width:Float,height:Float,offset:Float):MutableList<Line>{
-        val topLine=Line(x+offset-25f,y+offset-25f,width+offset+25f,y+offset-25f)
-        val bottomLine=Line(x+offset-25f,y+offset+25f,width+offset+25f,y+offset+25f)
-        val leftLine=Line(x+offset-25f,y+offset-25f,x+offset-25f,height+offset+25f)
-        val rightLine=Line(width+offset+25f,y+offset-25f,width+offset+25f,height+offset+25f)
+
+    private fun createBoundaryVertical(x:Float, y:Float, width:Float, height:Float, offset:Float):MutableList<Ray>{
+        val topLine=Ray(x+offset-25f,y+offset-25f,width+offset+25f,y+offset-25f)
+        val bottomLine=Ray(x+offset-25f,y+offset+25f,width+offset+25f,y+offset+25f)
+        val leftLine=Ray(x+offset-25f,y+offset-25f,x+offset-25f,height+offset+25f)
+        val rightLine=Ray(width+offset+25f,y+offset-25f,width+offset+25f,height+offset+25f)
         topLine.setColor(ColorRGBA.red)
         bottomLine.setColor(ColorRGBA.red)
         leftLine.setColor(ColorRGBA.red)
@@ -95,11 +97,11 @@ class Track {
         return mutableListOf(topLine,bottomLine,leftLine,rightLine)
     }
 
-    private fun createBoundary2(x:Float,y:Float,width:Float,height:Float,offset:Float):MutableList<Line>{
-        val leftLine=Line(x+offset-25f,y+offset-25f,x+offset-25f,height+offset+25f)
-        val rightLine=Line(x+offset+25f,y+offset-25f,x+offset+25f,height+offset+25f)
-        val bottomLine=Line(x+offset-25f,y+offset-25f,x+offset+25f,y+offset-25f)
-        val topLine=Line(width+offset-25f,height+offset+25f,width+offset+25f,height+offset+25f)
+    private fun createBoundaryHorizontal(x:Float, y:Float, width:Float, height:Float, offset:Float):MutableList<Ray>{
+        val leftLine=Ray(x+offset-25f,y+offset-25f,x+offset-25f,height+offset+25f)
+        val rightLine=Ray(x+offset+25f,y+offset-25f,x+offset+25f,height+offset+25f)
+        val bottomLine=Ray(x+offset-25f,y+offset-25f,x+offset+25f,y+offset-25f)
+        val topLine=Ray(width+offset-25f,height+offset+25f,width+offset+25f,height+offset+25f)
         topLine.setColor(ColorRGBA.red)
         bottomLine.setColor(ColorRGBA.red)
         leftLine.setColor(ColorRGBA.red)
@@ -111,7 +113,7 @@ class Track {
         return blocks
     }
 
-    fun getBorderLine():MutableList<Line>{
+    fun getBorderLine():MutableList<Ray>{
         return borderLines
     }
 }
