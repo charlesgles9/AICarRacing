@@ -2,7 +2,7 @@ package com.neural.evolution.utils
 
 class TmxPolyGon(private val text:String) {
 
-    private val points= mutableListOf<Pair<Float,Float>>()
+     val points= mutableListOf<Pair<Float,Float>>()
     init {
        val list=text.split(" ")
        list.forEach {

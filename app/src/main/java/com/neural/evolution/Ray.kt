@@ -41,8 +41,8 @@ class Ray(startX:Float,startY:Float,stopX:Float,stopY:Float):Line(startX, startY
     override fun draw(batch: Batch) {
         edge.set(getStopX(),getStopY())
            batch.draw(this)
-          if(showEdge)
-           batch.draw(edge)
+        //  if(showEdge)
+          // batch.draw(edge)
        // println(" "+getStopX()+" "+getStopY())
     }
 

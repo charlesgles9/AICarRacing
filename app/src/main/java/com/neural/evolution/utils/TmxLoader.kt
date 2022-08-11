@@ -9,7 +9,11 @@ class TmxLoader (private val path:String,private val context: Context){
 
      val xmlFactory=XmlPullParserFactory.newInstance()
      val xmlParser=xmlFactory.newPullParser()
-    private fun loadMap(){
+
+    init {
+        load()
+    }
+    private fun load(){
         try {
             val stream = context.assets.open(path)
             xmlParser.setInput(stream, null)

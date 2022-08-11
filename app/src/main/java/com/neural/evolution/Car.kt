@@ -4,33 +4,39 @@ import com.graphics.glcanvas.engine.Batch
 import com.graphics.glcanvas.engine.Update
 import com.graphics.glcanvas.engine.maths.ColorRGBA
 import com.graphics.glcanvas.engine.maths.Vector2f
+import com.graphics.glcanvas.engine.structures.PolyLine
 import com.graphics.glcanvas.engine.structures.RectF
 import com.neural.evolution.ai.NeuralNetwork
+import com.neural.evolution.algebra.Collision
 import com.neural.evolution.utils.Timer
 import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 
-class Car(private val startX:Float,private val startY:Float,width:Float,height:Float):RectF(startX, startY, width, height),Update{
+class Car(private val wall:PolyLine,private val startX:Float,private val startY:Float,width:Float,height:Float):RectF(startX, startY, width, height),Update{
 
     private val rays= mutableListOf<Ray>()
     private val bounds= MutableList(4,init = {Ray()})
     private val input= mutableListOf<Double>()
     private val raySize=5000f
-    private val max_velocity=2f
-    private val velocity=Vector2f(0f,0f)
-    private val timer=Timer(100)
-    val neuralNetwork=NeuralNetwork(360/45,6,360/45)
-     var score=0
+    private val max_velocity=5f
+    private var velocity=0f
+
+    val neuralNetwork=NeuralNetwork(5+2,8,2)
+
+     val score= mutableListOf<RectF>()
      var crashed=false
     init {
-        val maxAngle=360
-        for(angle in 0 until maxAngle step 45){
+        val angles= arrayOf(180f,135f,90f,45f,0f)
+        angles.forEach { angle->
             val ray=Ray()
             ray.setColor(ColorRGBA.red)
-            ray.angle=angle.toFloat()
+            ray.angle=angle
             ray.showEdge=true
             rays.add(ray)
         }
+
 
     }
 
@@ -57,14 +63,20 @@ class Car(private val startX:Float,private val startY:Float,width:Float,height:F
 
     private fun applyVelocity(){
         val radians=Math.toRadians(getRotationZ().toDouble()).toFloat()
-        set(getX()+velocity.x* sin(radians),getY()+velocity.y* cos(radians))
+        set(getX()+velocity* cos(radians),getY()+velocity* sin(radians))
+    }
+
+    private fun steering(dir:Int){
+        val rotation=getRotationZ()
+        if(dir==0){
+            setRotationZ( (rotation-1f)%360f)
+        }else
+            setRotationZ((rotation+1f)%360f)
     }
 
      fun reset(){
-         score=timer.getTick()
+         score.clear()
          set(startX,startY)
-
-         timer.reset()
          crashed=false
     }
 
@@ -80,40 +92,45 @@ class Car(private val startX:Float,private val startY:Float,width:Float,height:F
     }
 
 
+    private fun collision(){
+        // ray to wall collision
+        for(ray1 in getRays()) {
+            for(path in wall.getPaths()){
+                for(end in path.getEndPoints()){
+                    val d= Collision.detect_line_collision(ray1.getStartX(),ray1.getStartY(),ray1.getStopX(),ray1.getStopY(),
+                        path.getStart().x,path.getStart().y,end.x,end.y)
+                    if (Collision.do_lines_intersect(d)) {
+                        Collision.setInterSectionPoint(d, ray1)
+                    }
+                }
+            }
+        }
+    }
     override fun update(delta: Long) {
         super.update(delta)
         setBounds()
         applyVelocity()
-        timer.update(delta)
+
         //reset the ray project every frame
         rays.forEach {
-            it.pAngle=getRotationZ()
+            it.pAngle=-getRotationZ()
             it.project(raySize,getX(),getY())
+        }
+        collision()
+        rays.forEach {
             input.add(it.getDistance())
         }
+        input.add(velocity.toDouble())
+        input.add(getRotationZ().toDouble())
 
         val output=neuralNetwork.predict(input)
-        var highest=0.0
-        var chosen=0
-        for(i in 0 until output.size){
-            if(output[i]>highest) {
-                highest = output[i]
-                chosen=i
-            }
 
+        if(output[0]>=0.5f){
+            steering(0)
+        }else
+            steering(1)
 
-        }
-
-
-
-       // if(output[ch]>=0.5f){
-            setRotationZ(rays[chosen].angle)
-       // }else{
-        //    setRotationZ(getRotationZ()-1f)
-       // }
-
-
-        velocity.set(max_velocity,max_velocity)
+        velocity=max_velocity- max_velocity*output[1].toFloat()
 
         input.clear()
 

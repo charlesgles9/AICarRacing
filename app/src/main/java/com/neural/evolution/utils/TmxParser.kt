@@ -5,20 +5,21 @@ import java.util.*
 
 class TmxParser(private val loader: TmxLoader) {
 
-    private val data= Stack<TmxObjectGroup>()
+     val data= Stack<TmxObjectGroup>()
 
     init {
         parse()
     }
     private fun parse(){
         var event=loader.xmlParser.eventType
+
         while (event!=XmlPullParser.END_DOCUMENT){
             val name=loader.xmlParser.name
             when(event){
                 XmlPullParser.START_TAG->{
                     when(name){
                         "objectgroup"->
-                            data.add(TmxObjectGroup(getAttributeName()))
+                            data.push(TmxObjectGroup(getAttributeName()))
                         "object"->{
                             val pair=getAttributeXY()
                             val obj=TmxObject(pair.first,pair.second)
