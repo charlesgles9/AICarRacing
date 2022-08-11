@@ -6,6 +6,7 @@ import com.graphics.glcanvas.engine.maths.ColorRGBA
 import com.graphics.glcanvas.engine.maths.Vector2f
 import com.graphics.glcanvas.engine.structures.RectF
 import com.neural.evolution.ai.NeuralNetwork
+import com.neural.evolution.utils.Timer
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -13,12 +14,14 @@ class Car(private val startX:Float,private val startY:Float,width:Float,height:F
 
     private val rays= mutableListOf<Ray>()
     private val bounds= MutableList(4,init = {Ray()})
-    private val neuralNetwork=NeuralNetwork(360/45,10,2)
     private val input= mutableListOf<Double>()
     private val raySize=5000f
     private val max_velocity=2f
     private val velocity=Vector2f(0f,0f)
-     val crashed=false
+    private val timer=Timer(100)
+    val neuralNetwork=NeuralNetwork(360/45,6,360/45)
+     var score=0
+     var crashed=false
     init {
         val maxAngle=360
         for(angle in 0 until maxAngle step 45){
@@ -58,7 +61,11 @@ class Car(private val startX:Float,private val startY:Float,width:Float,height:F
     }
 
      fun reset(){
+         score=timer.getTick()
          set(startX,startY)
+
+         timer.reset()
+         crashed=false
     }
 
     override fun draw(batch: Batch) {
@@ -69,7 +76,7 @@ class Car(private val startX:Float,private val startY:Float,width:Float,height:F
        bounds.forEach {
            it.draw(batch)
        }
-       // batch.draw(this)
+        batch.draw(this)
     }
 
 
@@ -77,28 +84,39 @@ class Car(private val startX:Float,private val startY:Float,width:Float,height:F
         super.update(delta)
         setBounds()
         applyVelocity()
+        timer.update(delta)
         //reset the ray project every frame
         rays.forEach {
             it.pAngle=getRotationZ()
             it.project(raySize,getX(),getY())
-            input.add((it.angle+it.pAngle)%360.0)
+            input.add(it.getDistance())
         }
 
         val output=neuralNetwork.predict(input)
-        if(output[0]>=0.5f){
-            setRotationZ(getRotationZ()+1f)
-        }else{
-            setRotationZ(getRotationZ()-1f)
+        var highest=0.0
+        var chosen=0
+        for(i in 0 until output.size){
+            if(output[i]>highest) {
+                highest = output[i]
+                chosen=i
+            }
+
+
         }
 
-        if(output[1]<=0.5f){
-            velocity.set(max_velocity,max_velocity)
-        }else{
-            velocity.set(0f,0f)
-        }
 
+
+       // if(output[ch]>=0.5f){
+            setRotationZ(rays[chosen].angle)
+       // }else{
+        //    setRotationZ(getRotationZ()-1f)
+       // }
+
+
+        velocity.set(max_velocity,max_velocity)
 
         input.clear()
+
 
 
     }

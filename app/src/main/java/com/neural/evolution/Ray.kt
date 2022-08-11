@@ -6,7 +6,9 @@ import com.graphics.glcanvas.engine.maths.ColorRGBA
 import com.graphics.glcanvas.engine.structures.Circle
 import com.graphics.glcanvas.engine.structures.Line
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class Ray(startX:Float,startY:Float,stopX:Float,stopY:Float):Line(startX, startY, stopX, stopY),Update {
 
@@ -32,6 +34,10 @@ class Ray(startX:Float,startY:Float,stopX:Float,stopY:Float):Line(startX, startY
         setStartY(startY)
     }
 
+    fun getDistance():Double{
+        val d=(getStartX()-getStopX()).pow(2.0f)+(getStartY()-getStopY()).pow(2.0f).toDouble()
+        return sqrt(d)
+    }
     override fun draw(batch: Batch) {
         edge.set(getStopX(),getStopY())
            batch.draw(this)

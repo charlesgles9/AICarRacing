@@ -654,9 +654,9 @@ class Batch() {
                 vertexes[vcount++] = y
                 vertexes[vcount++] = z
                 //bottom left
-                vertexes[vcount++] = sizeX + x
-                vertexes[vcount++] = sizeY + y
-                vertexes[vcount++] = z
+                vertexes[vcount++] = line.x
+                vertexes[vcount++] = line.y
+                vertexes[vcount++] = line.z
 
                 centerVertex[mcount++]=x
                 centerVertex[mcount++]=y
