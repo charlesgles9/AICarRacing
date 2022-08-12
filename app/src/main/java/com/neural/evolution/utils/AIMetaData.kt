@@ -1,8 +1,10 @@
 package com.neural.evolution.utils
 
 import android.content.Context
+import android.text.TextUtils
 import android.util.Log
 import android.widget.Toast
+import androidx.core.text.isDigitsOnly
 import com.graphics.glcanvas.engine.utils.ResourceLoader
 import com.neural.evolution.ai.NeuralNetwork
 import org.json.JSONArray
@@ -16,10 +18,12 @@ class AIMetaData(private val network: NeuralNetwork) {
 
 
 
-    fun saveDataExists(path: String,context: Context):Boolean{
-        val storage=context.getExternalFilesDirs(null)[0]
-        val file=File(storage,path)
-        return file.exists()
+    companion object {
+        fun saveDataExists(path: String, context: Context): Boolean {
+            val storage = context.getExternalFilesDirs(null)[0]
+            val file = File(storage, path)
+            return file.exists()
+        }
     }
 
     fun saveData(context: Context, path:String){
@@ -77,8 +81,11 @@ class AIMetaData(private val network: NeuralNetwork) {
     private fun splitString(string: String):Array<Double>{
         val array=string.split(",")
         val list= Array(array.size,init = {0.0})
-        for (i in array.indices)
-            list[i]=array[i].trim().toDouble()
+        for (i in array.indices) {
+          val text=array[i]
+           if(TextUtils.isDigitsOnly(text))
+            list[i] = text.trim().toDouble()
+        }
         return list
     }
 

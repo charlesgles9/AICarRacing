@@ -89,6 +89,23 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
         getController()?.addEvent(nextGen!!)
 
+        if(!FileUtility.checkStoragePermissionDenied(context as Activity)&&AIMetaData.saveDataExists("data.json",context)){
+            //populate first car then copy contents to others
+            val car=cars[0]
+            AIMetaData(car.neuralNetwork).loadSaveData(context,"data.json")
+            for (i in 1 until cars.size){
+                cars[i].neuralNetwork.copy(car.neuralNetwork)
+                NeuralNetwork.mutate(cars[i].neuralNetwork,0.1f)
+            }
+        }else{
+            //populate first car then copy contents to others
+            val car=cars[0]
+            AIMetaData(car.neuralNetwork).populateDataFromAssets(context)
+            for (i in 1 until cars.size){
+                cars[i].neuralNetwork.copy(car.neuralNetwork)
+                NeuralNetwork.mutate(cars[i].neuralNetwork,0.1f)
+            }
+        }
 
     }
 
