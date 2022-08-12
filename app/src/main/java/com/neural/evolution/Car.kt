@@ -17,13 +17,13 @@ import kotlin.math.sin
 class Car(private val wall:PolyLine,private val startX:Float,private val startY:Float,width:Float,height:Float):RectF(startX, startY, width, height),Update{
 
     private val rays= mutableListOf<Ray>()
-    private val bounds= MutableList(4,init = {Ray()})
+    private val poly= PolyLine()
     private val input= mutableListOf<Double>()
     private val raySize=5000f
     private val max_velocity=5f
     private var velocity=0f
 
-    val neuralNetwork=NeuralNetwork(5+2,8,2)
+    val neuralNetwork=NeuralNetwork(5+2,4,2)
 
      val score= mutableListOf<RectF>()
      var crashed=false
@@ -45,19 +45,24 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
         return rays
     }
 
-    fun getBounds():MutableList<Ray>{
-        return bounds
+    fun getPoly():PolyLine{
+        return poly
     }
 
    private fun setBounds(){
-        //top bound
-        bounds[0].set(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f,getX()+getWidth()*0.5f,getY()-getHeight()*0.5f)
-        //bottom bound
-        bounds[1].set(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f,getX()+getWidth()*0.5f,getY()+getHeight()*0.5f)
-        //left bound
-        bounds[2].set(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f,getX()-getWidth()*0.5f,getY()+getHeight()*0.5f)
-        //right bound
-        bounds[3].set(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f,getX()+getWidth()*0.5f,getY()+getHeight()*0.5f)
+       poly.reset()
+       //top bound
+       poly.moveTo(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f)
+       poly.lineTo(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f)
+       //bottom bound
+       poly.moveTo(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f)
+       poly.lineTo(getX()+getWidth()*0.5f,getY()+getHeight()*0.5f)
+       //left bound
+       poly.moveTo(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f)
+       poly.lineTo(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f)
+       //right bound
+       poly.moveTo(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f)
+       poly.lineTo(getX()+getWidth()*0.5f,getY()+getHeight()*0.5f)
 
     }
 
@@ -69,25 +74,21 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
     private fun steering(dir:Int){
         val rotation=getRotationZ()
         if(dir==0){
-            setRotationZ( (rotation-1f)%360f)
+            setRotationZ( rotation-1f)
         }else
-            setRotationZ((rotation+1f)%360f)
+            setRotationZ(rotation+1f)
     }
 
      fun reset(){
-         score.clear()
          set(startX,startY)
          crashed=false
     }
 
     override fun draw(batch: Batch) {
-
-        rays.forEach {
+        /*rays.forEach {
             it.draw(batch)
-        }
-       bounds.forEach {
-           it.draw(batch)
-       }
+        }*/
+     //   batch.draw(poly)
         batch.draw(this)
     }
 

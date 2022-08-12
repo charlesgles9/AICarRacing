@@ -214,14 +214,32 @@ class Batch() {
 
                    }
                    when(bucket.getPrimitiveType()){
-                       Primitives.QUAD ->  addRectF(i, vertex)
-                       Primitives.TRIANGLE -> addPolygon(i, vertex)
-                       Primitives.CIRCLE ->  addCircle(i,vertex)
-                       Primitives.LINE ->  addLine(i,vertex)
-                       Primitives.POLYLINE -> addPolyLine(i, vertex)
-                       Primitives.POINT->addPoint(i,vertex)
+                       Primitives.QUAD ->  {
+                           addRectF(i, vertex)
+                           i++
+                       }
+                       Primitives.TRIANGLE -> {
+                           addPolygon(i, vertex)
+                           i++
+                       }
+                       Primitives.CIRCLE ->  {
+                           addCircle(i,vertex)
+                           i++
+                       }
+                       Primitives.LINE ->  {
+                           addLine(i,vertex)
+                           i++
+                       }
+                       Primitives.POLYLINE -> {
+                           i = addPolyLine(i, vertex)
+
+                       }
+                       Primitives.POINT-> {
+                           addPoint(i, vertex)
+                           i++
+                       }
                    }
-                   i++
+
                }
             if(i!=0) {
                 primitiveType = when(bucket.getPrimitiveType()){
@@ -696,7 +714,7 @@ class Batch() {
 
         }
         mTexture=vertex.getTexture().getId()
-        return vcount
+        return lcount
 
     }
 
@@ -794,7 +812,7 @@ class Batch() {
 
         }
         mTexture=vertex.getTexture().getId()
-        return vcount
+        return pcount
 
     }
 
