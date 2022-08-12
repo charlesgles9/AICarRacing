@@ -1,5 +1,6 @@
 package com.neural.evolution
 
+import android.app.Activity
 import android.content.Context
 import android.opengl.GLES32
 import com.graphics.glcanvas.engine.Batch
@@ -18,9 +19,8 @@ import com.graphics.glcanvas.engine.ui.OnClickEvent
 import com.graphics.glcanvas.engine.utils.FpsCounter
 import com.neural.evolution.ai.NeuralNetwork
 import com.neural.evolution.algebra.Collision
-import com.neural.evolution.utils.Timer
-import com.neural.evolution.utils.TmxLoader
-import com.neural.evolution.utils.TmxParser
+import com.neural.evolution.utils.*
+import kotlin.concurrent.thread
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -38,6 +38,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private var nextGen:GLLabel?=null
    private val axis=AxisABB()
    private var reset=false
+   private var saving=false
     override fun prepare() {
          batch.initShader(context)
          camera.setOrtho(getCanvasWidth(), getCanvasHeight())
@@ -91,6 +92,21 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
     }
 
+
+    private fun saveDataToCache(cars:MutableList<Car>){
+        if(!saving&&cars.isNotEmpty()) {
+                saving=true
+                cars.sortBy { it.score.size }
+                val bestCar=cars[cars.size-1]
+            thread {
+                if (!FileUtility.checkStoragePermissionDenied(context as Activity)) {
+                    AIMetaData(bestCar.neuralNetwork).saveData(context, "/data.json")
+                }
+                saving = false
+            }
+        }
+    }
+
   private fun geneticsAlgorithm(){
       for(car in cars)   {
           if(car.crashed)
@@ -101,8 +117,8 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
       if(cars.isEmpty()) {
           timer.reset()
           crashedCars.sortBy { it.score .size}
+          saveDataToCache(crashedCars)
           val children= mutableListOf<Car>()
-
           for (i in 0 until crashedCars.size/2) {
               //Selection: randomly pick a parent
               val parent =crashedCars[min(crashedCars.size/2+ Random.nextInt(crashedCars.size/2),crashedCars.size-1)]
@@ -192,7 +208,9 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
         if(timer.getTick()>50||reset){
             timer.reset()
             reset=false
+            saveDataToCache(cars)
             cars.forEach { it.crashed=true }
+
         }
         timer.update(delta)
         cars.forEach {car->

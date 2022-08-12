@@ -3,6 +3,7 @@ package com.neural.evolution
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.graphics.glcanvas.engine.GLCanvasSurfaceView
+import com.neural.evolution.utils.FileUtility
 
 class MainActivity : AppCompatActivity() {
     private var surface:GLCanvasSurfaceView?=null
@@ -11,6 +12,7 @@ class MainActivity : AppCompatActivity() {
         val renderer =Renderer(this,1280f,720f)
         surface=GLCanvasSurfaceView(this,renderer)
         setContentView(surface)
+        FileUtility.grantStoragePermission(this)
     }
 
     override fun onResume() {

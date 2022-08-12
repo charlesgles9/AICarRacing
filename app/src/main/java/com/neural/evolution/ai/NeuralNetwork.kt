@@ -9,10 +9,10 @@ import com.neural.evolution.algebra.Matrix
 
 
 class NeuralNetwork (val inputCount:Int, val hiddenCount:Int,  val outputCount:Int):Update{
-    private val weightsInputHidden= Matrix(hiddenCount,inputCount)
-    private val weightsHiddenOutput=Matrix(outputCount,hiddenCount)
-    private val biasHidden=Matrix(hiddenCount,1)
-    private val biasOutput=Matrix(outputCount,1)
+     val weightsInputHidden= Matrix(hiddenCount,inputCount)
+     val weightsHiddenOutput=Matrix(outputCount,hiddenCount)
+     val biasHidden=Matrix(hiddenCount,1)
+     val biasOutput=Matrix(outputCount,1)
 
     private val inputLayer= List(inputCount,init = {Circle(0f,0f,10f)})
     private val hiddenLayer=List(hiddenCount,init = {Circle(0f,0f,10f)})
