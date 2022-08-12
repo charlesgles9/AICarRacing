@@ -17,6 +17,7 @@ import com.graphics.glcanvas.engine.ui.GLButton
 import com.graphics.glcanvas.engine.ui.GLLabel
 import com.graphics.glcanvas.engine.ui.OnClickEvent
 import com.graphics.glcanvas.engine.utils.FpsCounter
+import com.graphics.glcanvas.engine.utils.Texture
 import com.neural.evolution.ai.NeuralNetwork
 import com.neural.evolution.algebra.Collision
 import com.neural.evolution.utils.*
@@ -30,7 +31,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private val batch=Batch()
    private val camera=Camera2D(10f)
    private val poly=PolyLine()
-   private val cars= MutableList(100,init = {Car(poly,100f,130f,25f,25f)})
+   private val cars= MutableList(100,init = {Car(poly,100f,130f,45f,25f)})
    private val crashedCars= mutableListOf<Car>()
    private var tmxMap= TmxParser(TmxLoader("raceTrack.tmx",context))
    private val checkpoints= mutableListOf<RectF>()
@@ -39,11 +40,13 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private val axis=AxisABB()
    private var reset=false
    private var saving=false
+   private var carTexture:Texture?=null
     override fun prepare() {
          batch.initShader(context)
          camera.setOrtho(getCanvasWidth(), getCanvasHeight())
+        carTexture= Texture(context,"4x4_white.png")
          cars.forEach { car->
-             car.setColor(ColorRGBA.blue)
+             car.setTexture(carTexture!!)
          }
           nextGen= GLLabel(100f,50f, Font(Font.CALIBRI,context),"Next",0.4f)
           nextGen?.set(getCanvasWidth()-180f,80f)
@@ -53,7 +56,6 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
         //objectGroup
             tmxMap.data.forEach { group->
              //object
-
              for(obj in group.getObjects()){
                  val offsetY = 50f
                  //polygons
@@ -74,7 +76,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
                      }
                  }else if(group.name=="checkPoint"){
-                      checkpoints.add(RectF(obj.x ,obj.y +offsetY,80f,80f))
+                      checkpoints.add(RectF(obj.x +obj.width*0.5f,obj.y +offsetY+obj.height*0.5f,obj.width,obj.height))
 
                    }
              }
@@ -89,10 +91,10 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
         getController()?.addEvent(nextGen!!)
 
-        if(!FileUtility.checkStoragePermissionDenied(context as Activity)&&AIMetaData.saveDataExists("data.json",context)){
+        if(!FileUtility.checkStoragePermissionDenied(context as Activity)&&AIMetaData.saveDataExists("/data.json",context)){
             //populate first car then copy contents to others
             val car=cars[0]
-            AIMetaData(car.neuralNetwork).loadSaveData(context,"data.json")
+            AIMetaData(car.neuralNetwork).loadSaveData(context,"/data.json")
             for (i in 1 until cars.size){
                 cars[i].neuralNetwork.copy(car.neuralNetwork)
                 NeuralNetwork.mutate(cars[i].neuralNetwork,0.1f)
@@ -139,10 +141,11 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
           for (i in 0 until crashedCars.size/2) {
               //Selection: randomly pick a parent
               val parent =crashedCars[min(crashedCars.size/2+ Random.nextInt(crashedCars.size/2),crashedCars.size-1)]
-              val car=Car(poly,100f,100f,25f,25f)
+              val car=Car(poly,100f,100f,45f,25f)
                   car.neuralNetwork.copy(parent.neuralNetwork)
                   NeuralNetwork.mutate(car.neuralNetwork,0.1f)
               car.setColor(parent.getColor())
+              car.setTexture(carTexture!!)
               children.add(car)
           }
 
@@ -166,9 +169,9 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
        GLES32.glClearColor(0.0f,0.0f,0.0f,1f)
         batch.setMode(BatchQueue.UNORDER)
         batch.begin(camera)
-       /* checkpoints.forEach {
+        checkpoints.forEach {
             batch.draw(it)
-        }*/
+        }
         cars.forEach {car->
             car.draw(batch)
         }
@@ -182,8 +185,6 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
         batch.begin(camera)
         nextGen?.draw(batch)
         batch.end()
-
-
 
     }
 

@@ -34,7 +34,6 @@ class AIMetaData(private val network: NeuralNetwork) {
             parent.mkdir()
         if(!file.exists())
             file.createNewFile()
-        println(file.exists())
         val jsonObject=JSONObject()
         jsonObject.put("WeightsIH",network.weightsInputHidden.toArray())
         jsonObject.put("WeightsHO",network.weightsHiddenOutput.toArray())
@@ -74,8 +73,8 @@ class AIMetaData(private val network: NeuralNetwork) {
         val biasOutput=jObject.getString("BiasOutput")
         network.weightsInputHidden.copy(splitString(inputHidden.substring(1,inputHidden.length-1)))
         network.weightsHiddenOutput.copy( splitString(hiddenOutput.substring(1,hiddenOutput.length-1)))
-        network.biasHidden.copy(splitString(hiddenOutput.substring(1,biasHidden.length-1)))
-        network.biasOutput.copy(splitString(hiddenOutput.substring(1,biasOutput.length-1)))
+        network.biasHidden.copy(splitString(biasHidden.substring(1,biasHidden.length-1)))
+        network.biasOutput.copy(splitString(biasOutput.substring(1,biasOutput.length-1)))
     }
 
     private fun splitString(string: String):Array<Double>{
@@ -93,6 +92,7 @@ class AIMetaData(private val network: NeuralNetwork) {
         val writer=BufferedWriter(FileWriter(file))
         writer.write(jsonArray.toString(1))
         writer.flush()
+        writer.close()
     }
 
     private fun loadJson(path:String,context: Context):JSONArray?{

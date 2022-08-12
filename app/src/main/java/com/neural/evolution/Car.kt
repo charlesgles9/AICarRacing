@@ -20,13 +20,12 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
     private val poly= PolyLine()
     private val input= mutableListOf<Double>()
     private val raySize=5000f
-    private val max_velocity=5f
+    private val max_velocity=8f
     private var velocity=0f
-
     val neuralNetwork=NeuralNetwork(5+2,4,2)
-
-     val score= mutableListOf<RectF>()
-     var crashed=false
+    val score= mutableListOf<RectF>()
+    var crashed=false
+    var angle=0f
     init {
         val angles= arrayOf(180f,135f,90f,45f,0f)
         angles.forEach { angle->
@@ -36,6 +35,7 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
             ray.showEdge=true
             rays.add(ray)
         }
+
 
 
     }
@@ -52,31 +52,47 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
    private fun setBounds(){
        poly.reset()
        //top bound
-       poly.moveTo(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f)
-       poly.lineTo(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f)
+        val top1=rotatePoints(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f,getX(),getY())
+        val top2=rotatePoints(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f,getX(),getY())
+       poly.moveTo(top1.first,top1.second)
+       poly.lineTo(top2.first,top2.second)
        //bottom bound
-       poly.moveTo(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f)
-       poly.lineTo(getX()+getWidth()*0.5f,getY()+getHeight()*0.5f)
+       val bottom1=rotatePoints(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f,getX(),getY())
+       val bottom2=rotatePoints(getX()+getWidth()*0.5f,getY()+getHeight()*0.5f,getX(),getY())
+       poly.moveTo(bottom1.first,bottom1.second)
+       poly.lineTo(bottom2.first,bottom2.second)
        //left bound
-       poly.moveTo(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f)
-       poly.lineTo(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f)
+       val left1=rotatePoints(getX()-getWidth()*0.5f,getY()-getHeight()*0.5f,getX(),getY())
+       val left2=rotatePoints(getX()-getWidth()*0.5f,getY()+getHeight()*0.5f,getX(),getY())
+       poly.moveTo(left1.first,left1.second)
+       poly.lineTo(left2.first,left2.second)
        //right bound
-       poly.moveTo(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f)
-       poly.lineTo(getX()+getWidth()*0.5f,getY()+getHeight()*0.5f)
+       val right1=rotatePoints(getX()+getWidth()*0.5f,getY()-getHeight()*0.5f,getX(),getY())
+       val right2=rotatePoints(getX()+getWidth()*0.5f,getY()+getHeight()*0.5f,getX(),getY())
+       poly.moveTo(right1.first,right1.second)
+       poly.lineTo(right2.first,right2.second)
+       poly.setColor(ColorRGBA.green)
 
     }
 
+    private fun rotatePoints(x:Float,y:Float,centerX:Float,centerY:Float ):Pair<Float,Float>{
+        val radians=Math.toRadians(angle.toDouble()).toFloat()
+        val nX=centerX+(x-centerX)*cos(radians)-(y-centerY)* sin(radians)
+        val nY=centerY+(x-centerX)* sin(radians)+(y-centerY)* cos(radians)
+        return Pair(nX,nY)
+    }
+
     private fun applyVelocity(){
-        val radians=Math.toRadians(getRotationZ().toDouble()).toFloat()
+        val radians=Math.toRadians(angle.toDouble()).toFloat()
         set(getX()+velocity* cos(radians),getY()+velocity* sin(radians))
     }
 
     private fun steering(dir:Int){
-        val rotation=getRotationZ()
+
         if(dir==0){
-            setRotationZ( rotation-1f)
+            angle-=1
         }else
-            setRotationZ(rotation+1f)
+            angle+=1
     }
 
      fun reset(){
@@ -88,7 +104,9 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
         /*rays.forEach {
             it.draw(batch)
         }*/
-     //   batch.draw(poly)
+        batch.draw(rays[2])
+        
+        batch.draw(poly)
         batch.draw(this)
     }
 
@@ -114,7 +132,7 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
 
         //reset the ray project every frame
         rays.forEach {
-            it.pAngle=-getRotationZ()
+            it.pAngle=-angle
             it.project(raySize,getX(),getY())
         }
         collision()
@@ -122,14 +140,18 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
             input.add(it.getDistance())
         }
         input.add(velocity.toDouble())
-        input.add(getRotationZ().toDouble())
+        input.add(angle.toDouble())
 
         val output=neuralNetwork.predict(input)
 
         if(output[0]>=0.5f){
             steering(0)
-        }else
+        }else {
             steering(1)
+        }
+
+        //direction faced by the agent
+        setRotationZ(rays[2].pAngle)
 
         velocity=max_velocity- max_velocity*output[1].toFloat()
 

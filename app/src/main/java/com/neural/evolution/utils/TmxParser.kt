@@ -23,7 +23,12 @@ class TmxParser(private val loader: TmxLoader) {
                         "object"->{
                             val pair=getAttributeXY()
                             val obj=TmxObject(pair.first,pair.second)
-                            data.peek().addObject(obj)
+                            val group=data.peek()
+                            if(group.name=="checkPoint"){
+                                obj.width=getAttributeWidth()
+                                obj.height=getAttributeHeight()
+                            }
+                            group.addObject(obj)
                         }
                         "polygon"->
                             data.peek().getObjects().last().createTmxPolygon(getAttributePoints())
@@ -40,6 +45,16 @@ class TmxParser(private val loader: TmxLoader) {
 
     private fun getAttributeName():String{
         return loader.xmlParser.getAttributeValue(null,"name")
+    }
+
+    private fun getAttributeWidth():Float{
+        val str= loader.xmlParser.getAttributeValue(null,"width") ?: return 0.0f
+        return str.toFloat()
+    }
+
+    private  fun getAttributeHeight():Float{
+        val str= loader.xmlParser.getAttributeValue(null,"height") ?: return 0.0f
+        return str.toFloat()
     }
     private fun getAttributePoints():String{
         return loader.xmlParser.getAttributeValue(null,"points")
