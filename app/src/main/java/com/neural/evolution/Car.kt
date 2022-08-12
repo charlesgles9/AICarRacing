@@ -104,9 +104,7 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
         /*rays.forEach {
             it.draw(batch)
         }*/
-        batch.draw(rays[2])
-        
-        batch.draw(poly)
+       // batch.draw(poly)
         batch.draw(this)
     }
 
@@ -152,12 +150,8 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
 
         //direction faced by the agent
         setRotationZ(rays[2].pAngle)
-
         velocity=max_velocity- max_velocity*output[1].toFloat()
-
         input.clear()
-
-
 
     }
 

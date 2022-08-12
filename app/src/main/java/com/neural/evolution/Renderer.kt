@@ -22,6 +22,7 @@ import com.neural.evolution.ai.NeuralNetwork
 import com.neural.evolution.algebra.Collision
 import com.neural.evolution.utils.*
 import kotlin.concurrent.thread
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -31,28 +32,35 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private val batch=Batch()
    private val camera=Camera2D(10f)
    private val poly=PolyLine()
-   private val cars= MutableList(100,init = {Car(poly,100f,130f,45f,25f)})
+   private val cars= MutableList(70,init = {Car(poly,100f,130f,45f,25f)})
    private val crashedCars= mutableListOf<Car>()
    private var tmxMap= TmxParser(TmxLoader("raceTrack.tmx",context))
    private val checkpoints= mutableListOf<RectF>()
    private val timer= Timer(1000)
-   private var nextGen:GLLabel?=null
    private val axis=AxisABB()
    private var reset=false
    private var saving=false
    private var carTexture:Texture?=null
+    //UI stuff
+   private var timerLabel:GLLabel?=null
+   private var nextGen:GLLabel?=null
+   private var font:Font?=null
     override fun prepare() {
          batch.initShader(context)
          camera.setOrtho(getCanvasWidth(), getCanvasHeight())
-        carTexture= Texture(context,"4x4_white.png")
+         carTexture= Texture(context,"4x4_white.png")
+         font=Font(Font.CALIBRI,context)
          cars.forEach { car->
              car.setTexture(carTexture!!)
          }
-          nextGen= GLLabel(100f,50f, Font(Font.CALIBRI,context),"Next",0.4f)
+          nextGen= GLLabel(100f,50f, font!!,"Next",0.4f)
           nextGen?.set(getCanvasWidth()-180f,80f)
           nextGen?.setBackgroundColor(ColorRGBA(0.8f,0f,0f,1f))
           nextGen?.roundedCorner(10f)
           nextGen?.setRippleColor(ColorRGBA(1f,0f,0f,1f))
+
+          timerLabel= GLLabel(250f,50f,font!!,"Time: 0",0.32f)
+          timerLabel?.set(getCanvasWidth()*0.5f,80f)
         //objectGroup
             tmxMap.data.forEach { group->
              //object
@@ -184,6 +192,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
         batch.begin(camera)
         nextGen?.draw(batch)
+        timerLabel?.draw(batch)
         batch.end()
 
     }
@@ -230,6 +239,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
             cars.forEach { it.crashed=true }
 
         }
+        timerLabel?.setText("Lap Timer: "+ max(50-timer.getTick(),0))
         timer.update(delta)
         cars.forEach {car->
             if(!car.crashed){
