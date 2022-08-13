@@ -14,7 +14,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-class Car(private val wall:PolyLine,private val startX:Float,private val startY:Float,width:Float,height:Float):RectF(startX, startY, width, height),Update{
+class Car(private val wall:PolyLine,private val startX:Float,private val startY:Float,width:Float,height:Float):RectF(startX, startY, width, height){
 
     private val rays= mutableListOf<Ray>()
     private val poly= PolyLine()
@@ -75,6 +75,8 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
 
     }
 
+
+
     private fun rotatePoints(x:Float,y:Float,centerX:Float,centerY:Float ):Pair<Float,Float>{
         val radians=Math.toRadians(angle.toDouble()).toFloat()
         val nX=centerX+(x-centerX)*cos(radians)-(y-centerY)* sin(radians)
@@ -100,12 +102,14 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
          crashed=false
     }
 
-    override fun draw(batch: Batch) {
-        /*rays.forEach {
+     fun draw(batch: Batch,debug:Boolean) {
+        if(debug){
+        rays.forEach {
             it.draw(batch)
-        }*/
-       // batch.draw(poly)
-        batch.draw(this)
+        }
+          batch.draw(poly)
+        }else
+            batch.draw(this)
     }
 
 

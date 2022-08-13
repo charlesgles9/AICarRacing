@@ -13,11 +13,10 @@ import com.graphics.glcanvas.engine.structures.Font
 import com.graphics.glcanvas.engine.structures.Line
 import com.graphics.glcanvas.engine.structures.PolyLine
 import com.graphics.glcanvas.engine.structures.RectF
-import com.graphics.glcanvas.engine.ui.GLButton
-import com.graphics.glcanvas.engine.ui.GLLabel
-import com.graphics.glcanvas.engine.ui.OnClickEvent
+import com.graphics.glcanvas.engine.ui.*
 import com.graphics.glcanvas.engine.utils.FpsCounter
 import com.graphics.glcanvas.engine.utils.Texture
+import com.graphics.glcanvas.engine.utils.TextureLoader
 import com.neural.evolution.ai.NeuralNetwork
 import com.neural.evolution.algebra.Collision
 import com.neural.evolution.utils.*
@@ -32,7 +31,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private val batch=Batch()
    private val camera=Camera2D(10f)
    private val poly=PolyLine()
-   private val cars= MutableList(70,init = {Car(poly,100f,130f,45f,25f)})
+   private val cars= MutableList(100,init = {Car(poly,100f,130f,45f,25f)})
    private val crashedCars= mutableListOf<Car>()
    private var tmxMap= TmxParser(TmxLoader("raceTrack.tmx",context))
    private val checkpoints= mutableListOf<RectF>()
@@ -41,23 +40,36 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private var reset=false
    private var saving=false
    private var carTexture:Texture?=null
+   private var checkPointTexture:Texture?=null
     //UI stuff
    private var timerLabel:GLLabel?=null
    private var nextGen:GLLabel?=null
+   private var debugLayout=LinearLayoutConstraint(null,200f,80f)
    private var font:Font?=null
     override fun prepare() {
          batch.initShader(context)
          camera.setOrtho(getCanvasWidth(), getCanvasHeight())
          carTexture= Texture(context,"4x4_white.png")
+         checkPointTexture= Texture(context,"checkPoint.png")
          font=Font(Font.CALIBRI,context)
          cars.forEach { car->
              car.setTexture(carTexture!!)
          }
           nextGen= GLLabel(100f,50f, font!!,"Next",0.4f)
-          nextGen?.set(getCanvasWidth()-180f,80f)
+          nextGen?.set(getCanvasWidth()-350f,80f)
           nextGen?.setBackgroundColor(ColorRGBA(0.8f,0f,0f,1f))
           nextGen?.roundedCorner(10f)
           nextGen?.setRippleColor(ColorRGBA(1f,0f,0f,1f))
+
+         debugLayout.set(getCanvasWidth()-150f,80f)
+         debugLayout.setBackgroundColor(ColorRGBA.transparent)
+         val debugLabel= GLLabel(100f,50f, font!!,"Debug",0.3f)
+         val debugMode=GLCheckBox(80f,80f, ColorRGBA.red)
+             debugMode.setBackgroundColor(ColorRGBA.gray)
+             debugMode.setCheckedColor(ColorRGBA.red)
+             debugMode.getConstraints().alignCenterVertical(debugLabel)
+          debugLayout.addItem(debugLabel)
+          debugLayout.addItem(debugMode)
 
           timerLabel= GLLabel(250f,50f,font!!,"Time: 0",0.32f)
           timerLabel?.set(getCanvasWidth()*0.5f,80f)
@@ -84,7 +96,9 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
                      }
                  }else if(group.name=="checkPoint"){
-                      checkpoints.add(RectF(obj.x +obj.width*0.5f,obj.y +offsetY+obj.height*0.5f,obj.width,obj.height))
+                     val check=RectF(obj.x +obj.width*0.5f,obj.y +offsetY+obj.height*0.5f,obj.width,obj.height)
+                         check.setTexture(checkPointTexture!!)
+                      checkpoints.add(check)
 
                    }
              }
@@ -97,7 +111,14 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
             }
         })
 
+        debugMode.setOnClickListener(object :OnClickEvent.OnClickListener{
+            override fun onClick() {
+
+            }
+        })
+
         getController()?.addEvent(nextGen!!)
+        getController()?.addEvent(debugMode)
 
         if(!FileUtility.checkStoragePermissionDenied(context as Activity)&&AIMetaData.saveDataExists("/data.json",context)){
             //populate first car then copy contents to others
@@ -136,7 +157,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
   private fun geneticsAlgorithm(){
       for(car in cars)   {
-          if(car.crashed)
+          if(car.crashed&&!crashedCars.contains(car))
               crashedCars.add(car)
       }
       //remove all cars that crashed
@@ -181,10 +202,10 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
             batch.draw(it)
         }
         cars.forEach {car->
-            car.draw(batch)
+            car.draw(batch,false)
         }
         crashedCars.forEach { car->
-            car.draw(batch)
+            car.draw(batch,false)
         }
 
         batch.draw(poly)
@@ -193,6 +214,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
         batch.begin(camera)
         nextGen?.draw(batch)
         timerLabel?.draw(batch)
+        debugLayout.draw(batch)
         batch.end()
 
     }
@@ -210,7 +232,6 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
             if(axis.isIntersecting(point,car)&&!car.score.contains(point))
                 car.score.add(point)
         }
-
 
         //car bound to wall collision
         for(cpath in car.getPoly().getPaths()) {
@@ -257,5 +278,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
     //clear resources here
     override fun onRelease() {
 
+        batch.cleanUp()
+        TextureLoader.getInstance().clearTextures()
     }
 }
