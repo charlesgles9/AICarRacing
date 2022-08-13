@@ -39,6 +39,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
    private val axis=AxisABB()
    private var reset=false
    private var saving=false
+   private var debug=false
    private var carTexture:Texture?=null
    private var checkPointTexture:Texture?=null
     //UI stuff
@@ -62,11 +63,13 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
           nextGen?.setRippleColor(ColorRGBA(1f,0f,0f,1f))
 
          debugLayout.set(getCanvasWidth()-150f,80f)
+         debugLayout.setOrientation(LinearLayoutConstraint.HORIZONTAL)
          debugLayout.setBackgroundColor(ColorRGBA.transparent)
          val debugLabel= GLLabel(100f,50f, font!!,"Debug",0.3f)
-         val debugMode=GLCheckBox(80f,80f, ColorRGBA.red)
-             debugMode.setBackgroundColor(ColorRGBA.gray)
+         val debugMode=GLCheckBox(50f,50f, ColorRGBA())
              debugMode.setCheckedColor(ColorRGBA.red)
+             debugMode.setChecked(false)
+             debugMode.roundedCorner(10f)
              debugMode.getConstraints().alignCenterVertical(debugLabel)
           debugLayout.addItem(debugLabel)
           debugLayout.addItem(debugMode)
@@ -113,7 +116,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
 
         debugMode.setOnClickListener(object :OnClickEvent.OnClickListener{
             override fun onClick() {
-
+              debug=!debugMode.getChecked()
             }
         })
 
@@ -155,6 +158,18 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
         }
     }
 
+
+   /* The fitness score is the number of checkPoints reached + the time taken to complete all
+    the tracks
+     checkpoints(denoted as score)+time
+    */
+    private fun calculateFitness(car: Car):Int{
+        var t=0
+        if(car.score.size==checkpoints.size)
+            t=timer.getTick()
+         return car.score.size+t
+    }
+
   private fun geneticsAlgorithm(){
       for(car in cars)   {
           if(car.crashed&&!crashedCars.contains(car))
@@ -164,7 +179,7 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
       cars.removeAll { it.crashed }
       if(cars.isEmpty()) {
           timer.reset()
-          crashedCars.sortBy { it.score .size}
+          crashedCars.sortBy { calculateFitness(it)}
           saveDataToCache(crashedCars)
           val children= mutableListOf<Car>()
           for (i in 0 until crashedCars.size/2) {
@@ -202,10 +217,10 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
             batch.draw(it)
         }
         cars.forEach {car->
-            car.draw(batch,false)
+            car.draw(batch,debug)
         }
         crashedCars.forEach { car->
-            car.draw(batch,false)
+            car.draw(batch,debug)
         }
 
         batch.draw(poly)
@@ -226,13 +241,13 @@ class Renderer(private val context: Context,width:Float,height:Float):GLRenderer
     private fun lineTo(x:Float,y:Float){
         poly.lineTo(x,y)
     }
+
     private fun testCollision(car:Car){
 
         for (point in checkpoints){
             if(axis.isIntersecting(point,car)&&!car.score.contains(point))
                 car.score.add(point)
         }
-
         //car bound to wall collision
         for(cpath in car.getPoly().getPaths()) {
             for (cend in cpath.getEndPoints()) {
