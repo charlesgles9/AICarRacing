@@ -89,13 +89,13 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
         set(getX()+velocity* cos(radians),getY()+velocity* sin(radians))
     }
 
-    private fun steering(dir:Int){
+    /*private fun steering(dir:Int){
 
         if(dir==0){
             angle-=1
         }else
             angle+=1
-    }
+    }*/
 
      fun reset(){
          set(startX,startY)
@@ -146,11 +146,10 @@ class Car(private val wall:PolyLine,private val startX:Float,private val startY:
 
         val output=neuralNetwork.predict(input)
 
-        if(output[0]>=0.5f){
-            steering(0)
-        }else {
-            steering(1)
-        }
+        angle+=if(output[0]>=0.5f)
+                  -1f
+                  else
+                    1f
 
         //direction faced by the agent
         setRotationZ(rays[2].pAngle)
