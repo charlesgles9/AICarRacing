@@ -1,6 +1,6 @@
 ## Architecture
 
-- **7 Input Neurons:-** of lines/rays projected in 7 different directions/angles of projection.
+- **7 Input Neurons:-** Length of lines/rays projected in 7 different directions/angles of projection.
 
 ``` kotlin
 
